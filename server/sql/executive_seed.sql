@@ -1,0 +1,36 @@
+INSERT INTO executives (
+  executive_code,
+  full_name,
+  phone,
+  email,
+  password_hash,
+  pan_number,
+  aadhar_number,
+  bank_account_name,
+  bank_account_number,
+  bank_ifsc,
+  bank_name,
+  commission_percent,
+  status,
+  joined_date,
+  notes,
+  created_by_admin_id
+)
+VALUES (
+  'EXEC001',
+  'Rahul Kumar',
+  '8888888888',
+  'rahul@example.com',
+  '$2b$10$P40DxnpKo0am5Xi6UIUKzOADLqT20lk6MNADuR4gi5431a9BfGVyW',
+  'ABCDE1234F',
+  '123412341234',
+  'Rahul Kumar',
+  '123456789012',
+  'SBIN0001234',
+  'State Bank of India',
+  20.00,
+  'active',
+  CURDATE(),
+  'Sample executive for login testing',
+  3
+);
