@@ -68,20 +68,21 @@ export const createOrder = async (req, res, next) => {
     const productIds = items.map((item) => item.product_id);
 
     const [products] = await connection.query(
-      `
-      SELECT
-        id,
-        product_name,
-        brand,
-        unit_label,
-        selling_price,
-        stock_qty,
-        is_active
-      FROM products
-      WHERE id IN (?)
-      `,
-      [productIds]
-    );
+  `
+  SELECT
+    id,
+    product_name,
+    brand,
+    unit_label,
+    selling_price,
+    stock_qty,
+    is_active
+  FROM products
+  WHERE id IN (?)
+  FOR UPDATE
+  `,
+  [productIds]
+);
 
     if (products.length !== productIds.length) {
       await connection.rollback();
@@ -120,13 +121,13 @@ export const createOrder = async (req, res, next) => {
       }
 
       if (product.stock_qty < quantity) {
-        await connection.rollback();
-        return sendError(
-          res,
-          `Insufficient stock for ${product.product_name}`,
-          400
-        );
-      }
+  await connection.rollback();
+  return sendError(
+    res,
+    `Only ${product.stock_qty} available for ${product.product_name}`,
+    400
+  );
+}
 
       const unitPrice = Number(product.selling_price);
       const lineTotal = unitPrice * quantity;
@@ -189,32 +190,41 @@ export const createOrder = async (req, res, next) => {
     const orderId = orderResult.insertId;
 
     for (const row of preparedItems) {
-      await connection.query(
-        `
-        INSERT INTO order_items (
-          order_id,
-          product_id,
-          product_name,
-          brand,
-          unit_label,
-          quantity,
-          unit_price,
-          line_total
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        `,
-        [
-          orderId,
-          row.product_id,
-          row.product_name,
-          row.brand,
-          row.unit_label,
-          row.quantity,
-          row.unit_price,
-          row.line_total,
-        ]
-      );
-    }
+  await connection.query(
+    `
+    INSERT INTO order_items (
+      order_id,
+      product_id,
+      product_name,
+      brand,
+      unit_label,
+      quantity,
+      unit_price,
+      line_total
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+    [
+      orderId,
+      row.product_id,
+      row.product_name,
+      row.brand,
+      row.unit_label,
+      row.quantity,
+      row.unit_price,
+      row.line_total,
+    ]
+  );
+
+  await connection.query(
+    `
+    UPDATE products
+    SET stock_qty = stock_qty - ?
+    WHERE id = ?
+    `,
+    [row.quantity, row.product_id]
+  );
+}
 
     await connection.commit();
 

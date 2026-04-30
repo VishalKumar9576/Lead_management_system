@@ -61,14 +61,15 @@ export default function DueOrdersTable({ dueOrders }) {
 
   return (
     <div className="space-y-4">
-      <div className="border border-gray-200 bg-white p-4">
+      {/* <div className="border border-gray-200 bg-white p-4">
         <h1 className="text-2xl font-bold text-gray-900">
           Payments & Due Tracking
         </h1>
         <p className="mt-1 text-sm text-gray-500">
           Track outstanding vendor dues, executive collections and pending payments.
         </p>
-      </div>
+      </div> */}
+      <hr />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <InfoCard

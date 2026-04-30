@@ -55,7 +55,10 @@ export default function ProductSearchBox({ products, selectedItems, onAddProduct
                     {product.product_name}
                   </p>
                   <p className="text-[11px] text-gray-500">
-                    {product.brand} • {product.unit_label} • Stock {product.stock_qty}
+                   {product.brand} • {product.unit_label} • Stock {product.stock_qty}
+{Number(product.stock_qty) > 0 && Number(product.stock_qty) <= 10
+  ? " • Low stock"
+  : ""}
                   </p>
                 </td>
 
@@ -66,12 +69,16 @@ export default function ProductSearchBox({ products, selectedItems, onAddProduct
                 <td className="px-2 py-2 text-right">
                   <button
                     type="button"
-                    disabled={alreadyAdded(product.id)}
+                    disabled={alreadyAdded(product.id) || Number(product.stock_qty) <= 0}
                     onClick={() => onAddProduct(product)}
                     className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white disabled:bg-gray-300"
                   >
                     <Plus size={13} />
-                    {alreadyAdded(product.id) ? "Added" : "Add"}
+                   {Number(product.stock_qty) <= 0
+  ? "Out"
+  : alreadyAdded(product.id)
+  ? "Added"
+  : "Add"}
                   </button>
                 </td>
               </tr>

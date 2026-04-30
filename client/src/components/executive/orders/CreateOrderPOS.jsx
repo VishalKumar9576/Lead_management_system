@@ -15,26 +15,36 @@ export default function CreateOrderPOS({
   const [orderNote, setOrderNote] = useState("");
   const [items, setItems] = useState([]);
 
-  const addProduct = (product) => {
-    setItems((prev) => [
-      ...prev,
-      {
-        ...product,
-        product_id: product.id,
-        quantity: 1,
-      },
-    ]);
-  };
+ const addProduct = (product) => {
+  if (Number(product.stock_qty) <= 0) {
+    alert(`${product.product_name} is out of stock`);
+    return;
+  }
+
+  setItems((prev) => [
+    ...prev,
+    {
+      ...product,
+      product_id: product.id,
+      quantity: 1,
+    },
+  ]);
+};
 
   const increaseQty = (id) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.product_id === id
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      )
-    );
-  };
+  setItems((prev) =>
+    prev.map((item) => {
+      if (item.product_id !== id) return item;
+
+      if (item.quantity >= Number(item.stock_qty)) {
+        alert(`Only ${item.stock_qty} available`);
+        return item;
+      }
+
+      return { ...item, quantity: item.quantity + 1 };
+    })
+  );
+};
 
   const decreaseQty = (id) => {
     setItems((prev) =>
@@ -70,6 +80,15 @@ export default function CreateOrderPOS({
       alert("Please add products");
       return;
     }
+
+    const invalidStockItem = items.find(
+  (item) => item.quantity > Number(item.stock_qty)
+);
+
+if (invalidStockItem) {
+  alert(`Only ${invalidStockItem.stock_qty} available for ${invalidStockItem.product_name}`);
+  return;
+}
 
     const payload = {
       vendor_id: Number(vendorId),

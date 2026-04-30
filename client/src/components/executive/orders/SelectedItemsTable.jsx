@@ -88,12 +88,19 @@ export default function SelectedItemsTable({
                     </span>
 
                     <button
-                      type="button"
-                      onClick={() => onIncrease(item.product_id)}
-                      className="rounded-md p-1 hover:bg-gray-100"
-                    >
-                      <Plus size={13} />
-                    </button>
+  type="button"
+  onClick={() => onIncrease(item.product_id)}
+  disabled={item.quantity >= Number(item.stock_qty)}
+  className="rounded-md p-1 hover:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-300"
+>
+  <Plus size={13} />
+</button>
+
+{item.quantity >= Number(item.stock_qty) && (
+  <p className="mt-2 text-xs font-medium text-red-600">
+    Only {item.stock_qty} available
+  </p>
+)}
                   </div>
 
                   <div className="text-right">
@@ -128,7 +135,8 @@ export default function SelectedItemsTable({
                         {item.product_name}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {item.brand} • {item.unit_label}
+                      {item.brand} • {item.unit_label} • Stock {item.stock_qty}
+                      {item.quantity >= Number(item.stock_qty) ? " • Limit reached" : ""}
                       </p>
                     </td>
 
@@ -149,12 +157,13 @@ export default function SelectedItemsTable({
                         </span>
 
                         <button
-                          type="button"
-                          onClick={() => onIncrease(item.product_id)}
-                          className="rounded-md p-1 hover:bg-gray-100"
-                        >
-                          <Plus size={13} />
-                        </button>
+  type="button"
+  onClick={() => onIncrease(item.product_id)}
+  disabled={item.quantity >= Number(item.stock_qty)}
+  className="rounded-md p-1 hover:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-300"
+>
+  <Plus size={13} />
+</button>
                       </div>
                     </td>
 

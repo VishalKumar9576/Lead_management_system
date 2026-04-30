@@ -24,6 +24,11 @@ import CreateAreaPage from "../pages/admin/CreateAreaPage";
 import CreateExecutivePage from "../pages/admin/CreateExecutivePage";
 import AssignExecutiveAreaPage from "../pages/admin/AssignExecutiveAreaPage";
 
+
+import ProductsPage from "../pages/admin/ProductsPage";
+import CreateProductPage from "../pages/admin/CreateProductPage";
+import EditProductPage from "../pages/admin/EditProductPage";
+
 export const router = createBrowserRouter([
   {
     path: "/login",
@@ -46,6 +51,9 @@ export const router = createBrowserRouter([
     { path: "/admin/orders", element: <OrdersPage /> },
     { path: "/admin/payments", element: <PaymentsDuePage /> },
     { path: "/admin/reports", element: <AdminReportsPage /> },
+    { path: "/admin/products", element: <ProductsPage /> },
+{ path: "/admin/products/create", element: <CreateProductPage /> },
+{ path: "/admin/products/:id/edit", element: <EditProductPage /> },
   ],
 },
       {

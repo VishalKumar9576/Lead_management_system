@@ -7,6 +7,7 @@ export const USER_ROLES = {
 
 export const ADMIN_MENU = [
   { label: "Dashboard", path: "/admin" },
+  { label: "Products", path: "/admin/products" },
   { label: "Areas", path: "/admin/areas" },
   { label: "Executives", path: "/admin/executives" },
   { label: "Orders", path: "/admin/orders" },

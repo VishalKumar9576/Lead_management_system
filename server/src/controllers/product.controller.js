@@ -14,6 +14,7 @@ export const createProduct = async (req, res, next) => {
       mrp,
       selling_price,
       stock_qty,
+extra_fields = [],
     } = req.body;
 
     if (
@@ -49,6 +50,10 @@ export const createProduct = async (req, res, next) => {
       return sendError(res, "MRP, selling price and stock qty cannot be negative", 400);
     }
 
+    if (numericSellingPrice > numericMrp) {
+  return sendError(res, "Selling price cannot be greater than MRP", 400);
+}
+
     const [existingCodeRows] = await pool.query(
       `SELECT id FROM products WHERE product_code = ? LIMIT 1`,
       [product_code]
@@ -69,10 +74,11 @@ export const createProduct = async (req, res, next) => {
         mrp,
         selling_price,
         stock_qty,
-        is_active,
-        created_by_admin_id
+is_active,
+extra_fields,
+created_by_admin_id
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, TRUE, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, TRUE, ?, ?)
       `,
       [
         product_code,
@@ -83,7 +89,8 @@ export const createProduct = async (req, res, next) => {
         numericMrp,
         numericSellingPrice,
         numericStockQty,
-        adminId,
+JSON.stringify(extra_fields || []),
+adminId,
       ]
     );
 
@@ -132,6 +139,7 @@ export const getAllProducts = async (req, res, next) => {
         selling_price,
         stock_qty,
         is_active,
+        extra_fields,
         created_at
       FROM products
       WHERE 1 = 1
@@ -168,7 +176,14 @@ export const getAllProducts = async (req, res, next) => {
 
     const [rows] = await pool.query(sql, values);
 
-    return sendSuccess(res, "Products fetched successfully", rows);
+// ADD STOCK FLAGS (SAFE - NO BREAKING)
+const enhancedRows = rows.map((p) => ({
+  ...p,
+  is_out_of_stock: p.stock_qty === 0,
+  is_low_stock: p.stock_qty > 0 && p.stock_qty <= 10, // threshold can change later
+}));
+
+return sendSuccess(res, "Products fetched successfully", enhancedRows);
   } catch (error) {
     next(error);
   }
@@ -220,7 +235,13 @@ export const getActiveProductsForExecutive = async (req, res, next) => {
 
     const [rows] = await pool.query(sql, values);
 
-    return sendSuccess(res, "Active products fetched successfully", rows);
+const enhancedRows = rows.map((p) => ({
+  ...p,
+  is_out_of_stock: p.stock_qty === 0,
+  is_low_stock: p.stock_qty > 0 && p.stock_qty <= 10,
+}));
+
+return sendSuccess(res, "Active products fetched successfully", enhancedRows);
   } catch (error) {
     next(error);
   }
@@ -238,6 +259,7 @@ export const updateProduct = async (req, res, next) => {
       selling_price,
       stock_qty,
       is_active,
+extra_fields,
     } = req.body;
 
     const [existingRows] = await pool.query(
@@ -248,6 +270,43 @@ export const updateProduct = async (req, res, next) => {
     if (existingRows.length === 0) {
       return sendError(res, "Product not found", 404);
     }
+
+
+    const numericMrp = mrp !== undefined ? Number(mrp) : null;
+const numericSellingPrice =
+  selling_price !== undefined ? Number(selling_price) : null;
+const numericStockQty = stock_qty !== undefined ? Number(stock_qty) : null;
+
+if (
+  (numericMrp !== null && Number.isNaN(numericMrp)) ||
+  (numericSellingPrice !== null && Number.isNaN(numericSellingPrice)) ||
+  (numericStockQty !== null && Number.isNaN(numericStockQty))
+) {
+  return sendError(res, "MRP, selling price and stock qty must be valid numbers", 400);
+}
+
+if (
+  (numericMrp !== null && numericMrp < 0) ||
+  (numericSellingPrice !== null && numericSellingPrice < 0) ||
+  (numericStockQty !== null && numericStockQty < 0)
+) {
+  return sendError(res, "MRP, selling price and stock qty cannot be negative", 400);
+}
+
+const [currentProductRows] = await pool.query(
+  `SELECT mrp, selling_price FROM products WHERE id = ? LIMIT 1`,
+  [id]
+);
+
+const finalMrp = numericMrp !== null ? numericMrp : Number(currentProductRows[0].mrp);
+const finalSellingPrice =
+  numericSellingPrice !== null
+    ? numericSellingPrice
+    : Number(currentProductRows[0].selling_price);
+
+if (finalSellingPrice > finalMrp) {
+  return sendError(res, "Selling price cannot be greater than MRP", 400);
+}
 
     await pool.query(
       `
@@ -260,7 +319,8 @@ export const updateProduct = async (req, res, next) => {
         mrp = COALESCE(?, mrp),
         selling_price = COALESCE(?, selling_price),
         stock_qty = COALESCE(?, stock_qty),
-        is_active = COALESCE(?, is_active)
+        is_active = COALESCE(?, is_active),
+extra_fields = COALESCE(?, extra_fields)
       WHERE id = ?
       `,
       [
@@ -272,7 +332,8 @@ export const updateProduct = async (req, res, next) => {
         selling_price ?? null,
         stock_qty ?? null,
         is_active ?? null,
-        id,
+extra_fields !== undefined ? JSON.stringify(extra_fields || []) : null,
+id,
       ]
     );
 
