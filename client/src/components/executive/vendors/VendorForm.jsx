@@ -71,7 +71,7 @@ export default function VendorForm({ areas, onCreate, loading }) {
             ))}
           </select>
         </label>
-        <Input label="Owner Name" name="owner_name" value={form.owner_name} onChange={handleChange} placeholder="Suresh Sharma" />
+        <Input label="Owner Name" name="owner_name" value={form.owner_name} onChange={handleChange} placeholder="vishal kumar" />
         <Input label="Shop Name" name="shop_name" value={form.shop_name} onChange={handleChange} placeholder="Sharma Kirana Store" />
         <Input label="Phone" name="phone" value={form.phone} onChange={handleChange} placeholder="9090909090" />
         <Input label="Email" name="email" value={form.email} onChange={handleChange} placeholder="shop@example.com" />

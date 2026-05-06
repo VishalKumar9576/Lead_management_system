@@ -1,5 +1,6 @@
 import { createBrowserRouter } from "react-router-dom";
 import LoginPage from "../pages/auth/LoginPage";
+import RegisterPage from "../pages/auth/RegisterPage";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
 import AreasPage from "../pages/admin/AreasPage";
 import ExecutivesPage from "../pages/admin/ExecutivesPage";
@@ -24,7 +25,6 @@ import CreateAreaPage from "../pages/admin/CreateAreaPage";
 import CreateExecutivePage from "../pages/admin/CreateExecutivePage";
 import AssignExecutiveAreaPage from "../pages/admin/AssignExecutiveAreaPage";
 
-
 import ProductsPage from "../pages/admin/ProductsPage";
 import CreateProductPage from "../pages/admin/CreateProductPage";
 import EditProductPage from "../pages/admin/EditProductPage";
@@ -35,27 +35,37 @@ export const router = createBrowserRouter([
     element: <LoginPage />,
   },
   {
+    path: "/register",
+    element: <RegisterPage />,
+  },
+  {
     element: <ProtectedRoute />,
     children: [
       {
-  element: <RoleRoute allowedRole="admin" />,
-  children: [
-    { path: "/admin", element: <AdminDashboardPage /> },
-    { path: "/admin/areas", element: <AreasPage /> },
-    { path: "/admin/areas/create", element: <CreateAreaPage /> },
-    { path: "/admin/executives", element: <ExecutivesPage /> },
-    { path: "/admin/executives/create", element: <CreateExecutivePage /> },
-{ path: "/admin/executives/assign-area", element: <AssignExecutiveAreaPage /> },
-    { path: "/admin/executives/:id", element: <ExecutiveDetailsPage /> },
-    { path: "/admin/vendors", element: <VendorsPage /> },
-    { path: "/admin/orders", element: <OrdersPage /> },
-    { path: "/admin/payments", element: <PaymentsDuePage /> },
-    { path: "/admin/reports", element: <AdminReportsPage /> },
-    { path: "/admin/products", element: <ProductsPage /> },
-{ path: "/admin/products/create", element: <CreateProductPage /> },
-{ path: "/admin/products/:id/edit", element: <EditProductPage /> },
-  ],
-},
+        element: <RoleRoute allowedRole="admin" />,
+        children: [
+          { path: "/admin", element: <AdminDashboardPage /> },
+          { path: "/admin/areas", element: <AreasPage /> },
+          { path: "/admin/areas/create", element: <CreateAreaPage /> },
+          { path: "/admin/executives", element: <ExecutivesPage /> },
+          {
+            path: "/admin/executives/create",
+            element: <CreateExecutivePage />,
+          },
+          {
+            path: "/admin/executives/assign-area",
+            element: <AssignExecutiveAreaPage />,
+          },
+          { path: "/admin/executives/:id", element: <ExecutiveDetailsPage /> },
+          { path: "/admin/vendors", element: <VendorsPage /> },
+          { path: "/admin/orders", element: <OrdersPage /> },
+          { path: "/admin/payments", element: <PaymentsDuePage /> },
+          { path: "/admin/reports", element: <AdminReportsPage /> },
+          { path: "/admin/products", element: <ProductsPage /> },
+          { path: "/admin/products/create", element: <CreateProductPage /> },
+          { path: "/admin/products/:id/edit", element: <EditProductPage /> },
+        ],
+      },
       {
         element: <RoleRoute allowedRole="executive" />,
         children: [

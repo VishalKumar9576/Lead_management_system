@@ -3,6 +3,7 @@ import {
   adminLogin,
   executiveLogin,
   getMyProfile,
+  register,
 } from "../controllers/auth.controller.js";
 import authMiddleware from "../middlewares/auth.middleware.js";
 import roleMiddleware from "../middlewares/role.middleware.js";
@@ -11,6 +12,7 @@ import { sendSuccess } from "../utils/response.js";
 const router = express.Router();
 
 router.post("/admin/login", adminLogin);
+router.post("/register", register);
 router.post("/executive/login", executiveLogin);
 router.get("/me", authMiddleware, getMyProfile);
 
@@ -22,7 +24,7 @@ router.get(
     return sendSuccess(res, "Admin protected route working", {
       user: req.user,
     });
-  }
+  },
 );
 
 router.get(
@@ -33,7 +35,7 @@ router.get(
     return sendSuccess(res, "Executive protected route working", {
       user: req.user,
     });
-  }
+  },
 );
 
 export default router;

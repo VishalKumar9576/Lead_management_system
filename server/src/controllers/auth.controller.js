@@ -18,7 +18,7 @@ export const adminLogin = async (req, res, next) => {
       WHERE phone = ?
       LIMIT 1
       `,
-      [phone]
+      [phone],
     );
 
     if (rows.length === 0) {
@@ -57,7 +57,7 @@ export const adminLogin = async (req, res, next) => {
           adminRole: admin.role,
         },
       },
-      200
+      200,
     );
   } catch (error) {
     next(error);
@@ -79,7 +79,7 @@ export const executiveLogin = async (req, res, next) => {
       WHERE phone = ?
       LIMIT 1
       `,
-      [phone]
+      [phone],
     );
 
     if (rows.length === 0) {
@@ -119,7 +119,7 @@ export const executiveLogin = async (req, res, next) => {
           status: executive.status,
         },
       },
-      200
+      200,
     );
   } catch (error) {
     next(error);
@@ -136,7 +136,7 @@ export const getMyProfile = async (req, res, next) => {
         WHERE id = ?
         LIMIT 1
         `,
-        [req.user.id]
+        [req.user.id],
       );
 
       if (rows.length === 0) {
@@ -159,7 +159,7 @@ export const getMyProfile = async (req, res, next) => {
         WHERE id = ?
         LIMIT 1
         `,
-        [req.user.id]
+        [req.user.id],
       );
 
       if (rows.length === 0) {
@@ -175,6 +175,146 @@ export const getMyProfile = async (req, res, next) => {
     }
 
     return sendError(res, "Invalid user role", 400);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const executiveRegister = async (req, res, next) => {
+  try {
+    const { full_name, phone, email, password } = req.body;
+
+    if (!full_name || !phone || !password) {
+      return sendError(res, "Full name, phone and password are required", 400);
+    }
+
+    const [existingPhone] = await pool.query(
+      `SELECT id FROM executives WHERE phone = ? LIMIT 1`,
+      [phone],
+    );
+
+    if (existingPhone.length > 0) {
+      return sendError(res, "Executive phone already exists", 409);
+    }
+
+    if (email) {
+      const [existingEmail] = await pool.query(
+        `SELECT id FROM executives WHERE email = ? LIMIT 1`,
+        [email],
+      );
+      if (existingEmail.length > 0) {
+        return sendError(res, "Executive email already exists", 409);
+      }
+    }
+
+    // generate a simple executive code if not provided
+    const executive_code = `EX${Date.now().toString().slice(-6)}`;
+
+    const password_hash = await bcrypt.hash(password, 10);
+
+    const [result] = await pool.query(
+      `
+      INSERT INTO executives (
+        executive_code,
+        full_name,
+        phone,
+        email,
+        password_hash,
+        commission_percent,
+        status,
+        joined_date
+      )
+      VALUES (?, ?, ?, ?, ?, ?, 'active', NOW())
+      `,
+      [executive_code, full_name, phone, email || null, password_hash, 20],
+    );
+
+    const [rows] = await pool.query(
+      `
+      SELECT
+        id,
+        executive_code,
+        full_name,
+        phone,
+        email,
+        commission_percent,
+        status,
+        joined_date,
+        created_at
+      FROM executives
+      WHERE id = ?
+      LIMIT 1
+      `,
+      [result.insertId],
+    );
+
+    return sendSuccess(res, "Registration successful", rows[0], 201);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const register = async (req, res, next) => {
+  try {
+    const { role = "executive" } = req.body;
+
+    if (role === "admin") {
+      const { full_name, phone, email, password } = req.body;
+
+      if (!full_name || !phone || !password) {
+        return sendError(
+          res,
+          "Full name, phone and password are required",
+          400,
+        );
+      }
+
+      const [existingPhone] = await pool.query(
+        `SELECT id FROM admins WHERE phone = ? LIMIT 1`,
+        [phone],
+      );
+
+      if (existingPhone.length > 0) {
+        return sendError(res, "Admin phone already exists", 409);
+      }
+
+      if (email) {
+        const [existingEmail] = await pool.query(
+          `SELECT id FROM admins WHERE email = ? LIMIT 1`,
+          [email],
+        );
+        if (existingEmail.length > 0) {
+          return sendError(res, "Admin email already exists", 409);
+        }
+      }
+
+      const password_hash = await bcrypt.hash(password, 10);
+
+      const [result] = await pool.query(
+        `
+        INSERT INTO admins (
+          full_name,
+          phone,
+          email,
+          password_hash,
+          role,
+          is_active
+        )
+        VALUES (?, ?, ?, ?, 'admin', TRUE)
+        `,
+        [full_name, phone, email || null, password_hash],
+      );
+
+      const [rows] = await pool.query(
+        `SELECT id, full_name, phone, email, role, is_active, created_at FROM admins WHERE id = ? LIMIT 1`,
+        [result.insertId],
+      );
+
+      return sendSuccess(res, "Admin registration successful", rows[0], 201);
+    }
+
+    // fallback to executive registration
+    return executiveRegister(req, res, next);
   } catch (error) {
     next(error);
   }

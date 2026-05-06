@@ -1,21 +1,21 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { adminLoginApi, executiveLoginApi } from "../../api/authApi";
+import { registerApi } from "../../api/authApi";
 import Button from "../../components/common/ui/Button";
 import Card from "../../components/common/ui/Card";
 import Input from "../../components/common/ui/Input";
 import AuthLayout from "../../layouts/AuthLayout";
-import { useAuth } from "../../hooks/useAuth";
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const navigate = useNavigate();
-  const { login } = useAuth();
-
   const [form, setForm] = useState({
-    role: "admin",
+    full_name: "",
     phone: "",
+    email: "",
     password: "",
+    confirm_password: "",
   });
+  const [role, setRole] = useState("executive");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -27,32 +27,27 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg("");
+
+    if (form.password !== form.confirm_password) {
+      setErrorMsg("Passwords do not match");
+      return;
+    }
+
     setLoading(true);
-
     try {
-      const payload = {
+      await registerApi({
+        role,
+        full_name: form.full_name,
         phone: form.phone,
+        email: form.email,
         password: form.password,
-      };
-
-      const response =
-        form.role === "admin"
-          ? await adminLoginApi(payload)
-          : await executiveLoginApi(payload);
-
-      const token = response?.data?.token;
-      const user = response?.data?.user;
-
-      login(token, user);
-
-      if (user?.role === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/executive");
-      }
+      });
+      alert("Registration successful. Please login.");
+      navigate("/login");
     } catch (error) {
       setErrorMsg(
-        error?.response?.data?.message || "Login failed. Please try again.",
+        error?.response?.data?.message ||
+          "Registration failed. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -63,27 +58,30 @@ export default function LoginPage() {
     <AuthLayout>
       <Card className="p-6">
         <div className="mb-6 text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Sales Management</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Login as admin or executive
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">Register</h1>
+          <p className="mt-1 text-sm text-gray-500">Create an account</p>
         </div>
 
+        <label className="flex flex-col gap-2">
+          <span className="text-sm font-medium text-gray-700">Register As</span>
+          <select
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            className="rounded-xl border border-gray-200 bg-white px-4 py-3 outline-none focus:border-blue-500"
+          >
+            <option value="executive">Executive</option>
+            <option value="admin">Admin</option>
+          </select>
+        </label>
+
         <form onSubmit={handleSubmit} className="space-y-4">
-          <label className="flex flex-col gap-2">
-            <span className="text-sm font-medium text-gray-700">
-              Login Role
-            </span>
-            <select
-              name="role"
-              value={form.role}
-              onChange={handleChange}
-              className="rounded-xl border border-gray-200 bg-white px-4 py-3 outline-none focus:border-blue-500"
-            >
-              <option value="admin">Admin</option>
-              <option value="executive">Executive</option>
-            </select>
-          </label>
+          <Input
+            label="Full Name"
+            name="full_name"
+            value={form.full_name}
+            onChange={handleChange}
+            placeholder="Enter full name"
+          />
 
           <Input
             label="Phone Number"
@@ -94,12 +92,29 @@ export default function LoginPage() {
           />
 
           <Input
+            label="Email (optional)"
+            name="email"
+            value={form.email}
+            onChange={handleChange}
+            placeholder="Enter email"
+          />
+
+          <Input
             label="Password"
             type="password"
             name="password"
             value={form.password}
             onChange={handleChange}
             placeholder="Enter password"
+          />
+
+          <Input
+            label="Confirm Password"
+            type="password"
+            name="confirm_password"
+            value={form.confirm_password}
+            onChange={handleChange}
+            placeholder="Confirm password"
           />
 
           {errorMsg && (
@@ -113,17 +128,17 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full py-3 text-sm font-semibold"
           >
-            {loading ? "Logging in..." : "Login"}
+            {loading ? "Registering..." : "Register"}
           </Button>
 
           <div className="text-center text-sm text-gray-500">
-            Don't have an account?{" "}
+            Already have an account?{" "}
             <button
               type="button"
-              onClick={() => navigate("/register")}
+              onClick={() => navigate("/login")}
               className="text-blue-600"
             >
-              Register
+              Login
             </button>
           </div>
         </form>
