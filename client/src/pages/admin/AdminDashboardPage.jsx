@@ -43,7 +43,7 @@ export default function AdminDashboardPage() {
   return (
     <AdminLayout>
       <div className="space-y-4">
-        <h1>Deepak</h1>
+        {/* <h1>Deepak</h1> */}
         {loading && (
           <div className="border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700">
             Loading dashboard...
